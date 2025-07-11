@@ -36,7 +36,6 @@ const homeButton = document.getElementById('home-button');
 
 function init() {
     const textureLoader = new THREE.TextureLoader();
-    // Предполагается, что у вас есть папка textures с файлами
     const topBottomTexture = textureLoader.load('textures/top-bottom.png'); 
 
     const LIFT_HEIGHT = 0.20;
@@ -71,7 +70,6 @@ function init() {
     plane.receiveShadow = true;
     scene.add(plane);
 
-    // Поднимаем центральную точку. Это НЕ влияет на боксы напрямую.
     circleCenterPoint = new THREE.Vector3(0, (boxHeight / 2) + LIFT_HEIGHT, 0);
 
     const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
@@ -99,11 +97,10 @@ function init() {
 
         const box = new THREE.Mesh(boxGeometry, materials);
 
-        // Поднимаем боксы
         const angle = startAngle + i * angleStep;
         box.position.set(
             circleCenterPoint.x + arcRadius * Math.sin(angle),
-            (boxHeight / 2) + LIFT_HEIGHT, // <-- ИЗМЕНЕНИЕ ДЛЯ ВЫСОТЫ
+            (boxHeight / 2) + LIFT_HEIGHT,
             circleCenterPoint.z + arcRadius * Math.cos(angle)
         );
 
@@ -114,7 +111,6 @@ function init() {
         allBoxes.push(box);
     }
 
-    // Поднимаем точку, на которую смотрят общие камеры
     arcFocusTarget = (numActualBoxes > 0) ? new THREE.Vector3(circleCenterPoint.x, (boxHeight / 2) + LIFT_HEIGHT, circleCenterPoint.z + arcRadius) : new THREE.Vector3(0, (boxHeight / 2) + LIFT_HEIGHT, 0);
 
     cameraViews.push({ navLabel: "Домой", viewId: 0, name: "View 1: Top Down", type: "general", position: new THREE.Vector3(arcFocusTarget.x, arcFocusTarget.y + 40, arcFocusTarget.z + 5), lookAt: arcFocusTarget.clone(), fov: 60 });
@@ -128,7 +124,6 @@ function init() {
         cameraViews.push({ navLabel: (index === 0) ? "Бокс 1" : null, viewId: BOX_FOCUS_VIEWS_START_INDEX + index, name: `View 3.${index + 1}: Focus Box ${index + 1}`, type: "box_focus", boxIndex: index, position: targetCameraPosition, lookAt: targetLookAtPos, fov: 50 });
     });
 
-    // --- ЭТОТ БЛОК ОСТАЛСЯ НЕИЗМЕННЫМ, КАК ВЫ И ПРОСИЛИ ---
     const lastBoxFocusView = cameraViews[BOX_FOCUS_VIEWS_START_INDEX + numActualBoxes - 1];
     const finalCamPos_s = lastBoxFocusView.position.clone();
     finalCamPos_s.x += 1.0;
@@ -137,7 +132,6 @@ function init() {
     finalLookAt_s.x += 1.0;
     finalLookAt_s.y -= 0.5 - LIFT_HEIGHT;
     cameraViews.push({ navLabel: "До вращения", viewId: cameraViews.length, name: `View 4: Shifted Look Box ${numActualBoxes}`, type: "final_look", boxIndex: numActualBoxes - 1, position: finalCamPos_s, lookAt: finalLookAt_s, fov: lastBoxFocusView.fov });
-    // --- КОНЕЦ НЕИЗМЕННОГО БЛОКА ---
 
     FINAL_LOOK_VIEW_INDEX = cameraViews.length - 1;
     BOX_ROTATION_VIEWS_START_INDEX = cameraViews.length;
@@ -181,7 +175,7 @@ function setupHeaderNavigation() {
     const navPoints = [ { label: "Общий вид", targetViewNameOrIndex: 1 }, { label: "Бокс 1", targetViewNameOrIndex: "View 3.1: Focus Box 1" }, { label: "Вращение", targetViewNameOrIndex: "View 5.1 (Base for Rotation)" }, { label: "Финал", targetViewNameOrIndex: "View 6: Fade Out" } ];
     navPoints.forEach(point => {
         const link = document.createElement('a'); link.href = "#";
-        link.classList.add('header-nav-link', 'nav-button-style'); // Добавляем оба класса
+        link.classList.add('header-nav-link', 'nav-button-style');
         link.textContent = point.label;
         let targetIndex = -1;
         if (typeof point.targetViewNameOrIndex === 'number') { targetIndex = point.targetViewNameOrIndex; } else { targetIndex = cameraViews.findIndex(cv => cv.name === point.targetViewNameOrIndex); }
@@ -295,10 +289,10 @@ function onMouseWheel(event) {
     accumulatedDeltaY += event.deltaY; clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => { if (!isAnimating) accumulatedDeltaY = 0; }, 400); 
     if (accumulatedDeltaY > SCROLL_THRESHOLD) { 
-        if (currentViewIndex < cameraViews.length - 1) { setCameraToView(currentViewIndex + 1); clearTimeout(scrollTimeout); accumulatedDeltaY = 0; /* Сброс после срабатывания */ } 
+        if (currentViewIndex < cameraViews.length - 1) { setCameraToView(currentViewIndex + 1); clearTimeout(scrollTimeout); accumulatedDeltaY = 0; } 
         else accumulatedDeltaY = 0; 
     } else if (accumulatedDeltaY < -SCROLL_THRESHOLD) { 
-        if (currentViewIndex > 0) { setCameraToView(currentViewIndex - 1); clearTimeout(scrollTimeout); accumulatedDeltaY = 0; /* Сброс после срабатывания */ } 
+        if (currentViewIndex > 0) { setCameraToView(currentViewIndex - 1); clearTimeout(scrollTimeout); accumulatedDeltaY = 0; } 
         else accumulatedDeltaY = 0; 
     }
 }
