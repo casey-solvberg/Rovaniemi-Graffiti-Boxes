@@ -207,16 +207,13 @@ function setCameraToView(viewIndex, instant = false) {
     if (isAnimating && !instant) return;
     if (viewIndex < 0 || viewIndex >= cameraViews.length) return;
 
-    // --- ИЗМЕНЕНИЕ НАЧАЛО ---
-    // Сначала получаем КОНФИГУРАЦИЮ ПРЕДЫДУЩЕГО вида, пока currentViewIndex еще старый
     const prevViewConfig = cameraViews[currentViewIndex];
-    // --- ИЗМЕНЕНИЕ КОНЕЦ ---
 
     const targetViewConfig = cameraViews[viewIndex];
     isAnimating = true;
     canProcessScroll = false;
 
-    currentViewIndex = viewIndex; // Теперь обновляем индекс
+    currentViewIndex = viewIndex;
     currentScrollThreshold = SCROLL_THRESHOLD;
     updateHeaderNavActiveState(currentViewIndex);
 
@@ -228,7 +225,6 @@ function setCameraToView(viewIndex, instant = false) {
         actualCameraPosition = targetViewConfig.position.clone(); actualLookAt = targetViewConfig.lookAt.clone(); actualFov = targetViewConfig.fov;
     }
 
-    // Передаем правильную конфигурацию предыдущего вида
     handleSceneAndFooterState(targetViewConfig, prevViewConfig); 
     
     const duration = (targetViewConfig.type === "box_rotation" || targetViewConfig.type === "final_fade") ? rotationAnimationDuration : cameraAnimationDuration;
@@ -259,26 +255,21 @@ function handleSceneAndFooterState(targetView, prevView) {
     const targetType = targetView.type;
     const prevType = prevView ? prevView.type : null;
 
-    // Управление высотой футера
     if (targetType === "final_fade") { pageFooterUI.style.height = '92vh'; }
     else if (targetType === "final_look" || targetType === "box_rotation") { pageFooterUI.style.height = '13vh'; }
     else { pageFooterUI.style.height = '8vh'; }
 
-    // --- ИЗМЕНЕНИЕ НАЧАЛО: Централизованная логика сброса вращения ---
     const rotatingBox = allBoxes[numActualBoxes - 1];
     const wasInRotationSequence = prevType === 'box_rotation' || prevType === 'final_look' || prevType === 'final_fade';
     const isEnteringGeneralSequence = targetType !== 'box_rotation' && targetType !== 'final_look' && targetType !== 'final_fade';
 
-    // Если мы покинули секцию вращения (через меню или скролл назад), сбрасываем поворот бокса
     if (wasInRotationSequence && isEnteringGeneralSequence) {
         rotatingBox.rotation.y = rotatingBox.userData.initialRotationY;
     }
-    // --- ИЗМЕНЕНИЕ КОНЕЦ ---
 
     const isRotationOrFade = (targetType === "box_rotation" || targetType === "final_fade");
     const isFinalLook = (targetType === "final_look");
     
-    // Управление видимостью объектов сцены
     plane.visible = !(isFinalLook || isRotationOrFade);
     
     allBoxes.forEach(b => {
@@ -291,7 +282,6 @@ function handleSceneAndFooterState(targetView, prevView) {
         }
     });
 
-    // Управление текстовой панелью
     if (targetType === "general") { 
         textPanelUI.style.display = 'none'; 
     } else { 
@@ -344,5 +334,4 @@ function onWindowResize() {
 
 function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
 
-// Запускаем инициализацию после загрузки DOM
 init();
