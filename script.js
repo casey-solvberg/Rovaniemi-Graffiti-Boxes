@@ -160,6 +160,19 @@ function init() {
     prevBoxBtn.addEventListener('click', () => navigateWithButtons(-1));
     nextBoxBtn.addEventListener('click', () => navigateWithButtons(1));
     animate();
+
+    const finalViewIndex = cameraViews.findIndex(view => view.type === 'final_fade');
+if (pageFooterUI && finalViewIndex !== -1) {
+    pageFooterUI.addEventListener('click', (event) => {
+        if (event.target.closest('a')) {
+            return;
+        }
+
+        if (!isAnimating && currentViewIndex !== finalViewIndex) {
+            setCameraToView(finalViewIndex, false);
+        }
+    });
+}
 }
 
 function setupHeaderNavigation() {
