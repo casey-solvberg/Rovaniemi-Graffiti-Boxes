@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graffiti Boxes Rovaniemi</title>
+    <!-- Ссылка на внешний файл стилей -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Canvas для 3D-сцены будет создан скриптом, но UI-элементы здесь -->
+
+    <div id="page-header" class="ui-element">
+        <button id="home-button" class="my-icon-button header-nav-link" title="Начальный вид" data-view-index="0">
+            <svg class="my-icon-button-svg" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        </button>
+        <div id="header-nav-links-container">
+            <!-- Ссылки навигации будут созданы скриптом -->
+        </div>
+    </div>
+
+    <div id="nav-arrows" class="ui-element">
+        <button id="prev-box-btn" class="nav-button-style">< Пред. Бокс</button>
+        <button id="next-box-btn" class="nav-button-style">След. Бокс ></button>
+    </div>
+
+    <div id="text-panel" class="ui-element">Информация появится здесь...</div>
+
+    <div id="page-footer" class="ui-element">Футер</div>
+
+    <!-- Библиотеки и основной скрипт -->
+    <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/" } }</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- Ссылка на внешний файл JavaScript с type="module" -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>

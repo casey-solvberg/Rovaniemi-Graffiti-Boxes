@@ -1,0 +1,191 @@
+body { 
+    margin: 0; 
+    overflow: hidden; 
+    font-family: Arial, sans-serif; 
+    background-color: #333; 
+}
+canvas { 
+    display: block; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    z-index: 1; 
+}
+.ui-element {
+    box-sizing: border-box;
+    color: white;
+    padding: 10px;
+    z-index: 10;
+    transition: height 0.7s ease-in-out, opacity 0.7s ease-in-out;
+}
+#page-header {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0;
+    height: 8vh; 
+    background-color: rgba(30, 30, 30, 0.85);
+    display: flex; 
+    align-items: center; 
+    padding: 0 10px; 
+    overflow: hidden; 
+    z-index: 20; 
+}
+#page-footer { 
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    right: 0; 
+    height: 8vh; 
+    background-color: rgba(30, 30, 30, 0.85); 
+    display: flex; 
+    align-items: center; 
+    padding: 0 20px; 
+}
+
+#nav-arrows {
+    position: fixed; 
+    bottom: calc(8vh + 15px); 
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex; 
+    gap: 10px;
+    visibility: hidden;
+}
+
+/* Общие стили для кнопок навигации (хедер и nav-arrows) */
+.nav-button-style {
+    color: #e0e0e0;
+    background-color: rgba(74, 74, 74, 0.8);
+    border: 1px solid #666;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-flex; 
+    align-items: center;
+    justify-content: center;
+}
+.nav-button-style:hover:not(.disabled) {
+    background-color: #555;
+    color: white;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+.nav-button-style:active:not(.disabled),
+.nav-button-style.active {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border-color: #0056b3;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.nav-button-style:active:not(.disabled) {
+     transform: scale(0.95);
+}
+
+/* Применяем .nav-button-style к кнопкам в #nav-arrows */
+#nav-arrows button {
+    /* Наследует стили от .nav-button-style */
+}
+/* Отдельно для неактивных кнопок в #nav-arrows */
+#nav-arrows button.disabled {
+    background-color: rgba(30, 30, 30, 0.85);
+    color: #888888;
+    border-color: #444;
+    cursor: not-allowed;
+    visibility: hidden; 
+    box-shadow: none;
+    transform: none;
+}
+
+#text-panel {
+    position: fixed; 
+    top: calc(8vh + 10px); 
+    right: 5vw; 
+    width: 50vw;
+    max-height: calc(100vh - 8vh - 8vh - 30px); 
+    background-color: rgba(0, 0, 255, 0.2);
+    padding: 1rem; 
+    border-radius: 0.5rem; 
+    overflow-y: auto;
+    display: none; 
+    opacity: 1;
+}
+
+#home-button { 
+    position: absolute; 
+    left: 10px; 
+    top: 50%;
+    transform: translateY(-50%); 
+    z-index: 25; 
+}
+
+#header-nav-links-container { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 8px; 
+    width: 100%; 
+    height: 100%; 
+    padding-left: 60px;
+    padding-right: 10px;
+}
+
+.header-nav-link { 
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 6px 10px;
+    font-size: 0.9rem; 
+}
+
+/* Стили для круглой кнопки "Домой" */
+.my-icon-button { 
+    width: 40px; 
+    height: 40px; 
+    padding: 0; 
+    border-radius: 50%; 
+    background-color: #e0e0e0;
+    color: #4a4a4a; 
+    border: 1px solid #c0c0c0; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease, color 0.2s ease;
+    transform-origin: center; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.my-icon-button:hover:not(.active):not(:disabled) {
+    background-color: #555;
+    color: white;
+    border-color: #444;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+.my-icon-button:active:not(:disabled) { 
+    background-color: #c0c0c0;
+    transform: translateY(-50%) scale(0.92); 
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
+}
+.my-icon-button.active {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #0056b3 !important;
+}
+.my-icon-button:disabled {
+    background-color: rgba(30, 30, 30, 0.85); 
+    color: #888888; 
+    cursor: not-allowed; 
+    box-shadow: none; 
+    border-color: #444;
+}
+.my-icon-button-svg { 
+    width: 20px; 
+    height: 20px; 
+    stroke-width: 2; 
+}
