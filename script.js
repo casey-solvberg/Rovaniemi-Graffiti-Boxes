@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 let scene, camera, renderer;
 let plane, allBoxes = [];
+let backgroundCylinder;
 let arcFocusTarget, circleCenterPoint;
 const boxHeight = 2.44, boxWidth = 1.3, boxDepth = 0.32;
 const LIFT_HEIGHT = 0.20;
@@ -70,6 +71,35 @@ function init() {
     plane.receiveShadow = true;
     scene.add(plane);
 
+    const BACKGROUND_RADIUS = 100;
+    const BACKGROUND_HEIGHT = 40;
+    const BACKGROUND_Y_OFFSET = 20;
+    const BACKGROUND_Z_OFFSET = 100;
+    const BACKGROUND_ARC_DEGREES = 80;
+
+    const startAngleRad = THREE.MathUtils.degToRad(180 - (BACKGROUND_ARC_DEGREES / 2));
+    const lengthAngleRad = THREE.MathUtils.degToRad(BACKGROUND_ARC_DEGREES);
+    
+    const backgroundCylinderGeometry = new THREE.CylinderGeometry(
+        BACKGROUND_RADIUS,
+        BACKGROUND_RADIUS,
+        BACKGROUND_HEIGHT,
+        64,
+        1,
+        true,
+        startAngleRad,
+        lengthAngleRad
+    );
+
+    const backgroundCylinderMaterial = new THREE.MeshStandardMaterial({
+        color: 0x00ff00,
+        side: THREE.BackSide
+    });
+
+    backgroundCylinder = new THREE.Mesh(backgroundCylinderGeometry, backgroundCylinderMaterial);
+    backgroundCylinder.position.set(0, BACKGROUND_Y_OFFSET, BACKGROUND_Z_OFFSET);
+    scene.add(backgroundCylinder);
+
     circleCenterPoint = new THREE.Vector3(0, (boxHeight / 2) + LIFT_HEIGHT, 0);
 
     const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
@@ -77,6 +107,7 @@ function init() {
     const startAngle = -totalArcAngleRad / 2;
 
     for (let i = 0; i < numActualBoxes; i++) {
+        // --- НАЧАЛО ВОССТАНОВЛЕННОГО БЛОКА (для равных частей) ---
         const sideTexture = textureLoader.load(`textures/box_${i + 1}_sides.png`);
         sideTexture.wrapS = THREE.RepeatWrapping;
         sideTexture.repeat.x = 0.25;
@@ -89,11 +120,12 @@ function init() {
             new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.1 }),
             new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.1 })
         ];
-        
-        materials[0].map.offset.x = 0.25;
-        materials[1].map.offset.x = 0.75;
-        materials[4].map.offset.x = 0.0;
-        materials[5].map.offset.x = 0.5;
+
+        materials[0].map.offset.x = 0.25; // Правая грань
+        materials[1].map.offset.x = 0.75; // Левая грань
+        materials[4].map.offset.x = 0.0;  // Передняя грань
+        materials[5].map.offset.x = 0.5;  // Задняя грань
+        // --- КОНЕЦ ВОССТАНОВЛЕННОГО БЛОКА ---
 
         const box = new THREE.Mesh(boxGeometry, materials);
 
@@ -156,17 +188,16 @@ function init() {
     animate();
 
     const finalViewIndex = cameraViews.findIndex(view => view.type === 'final_fade');
-if (pageFooterUI && finalViewIndex !== -1) {
-    pageFooterUI.addEventListener('click', (event) => {
-        if (event.target.closest('a')) {
-            return;
-        }
-
-        if (!isAnimating && currentViewIndex !== finalViewIndex) {
-            setCameraToView(finalViewIndex, false);
-        }
-    });
-}
+    if (pageFooterUI && finalViewIndex !== -1) {
+        pageFooterUI.addEventListener('click', (event) => {
+            if (event.target.closest('a')) {
+                return;
+            }
+            if (!isAnimating && currentViewIndex !== finalViewIndex) {
+                setCameraToView(finalViewIndex, false);
+            }
+        });
+    }
 }
 
 function setupHeaderNavigation() {
@@ -265,7 +296,8 @@ function handleSceneAndFooterState(targetView, prevView) {
     const isFinalLook = (targetType === "final_look");
     
     plane.visible = !(isFinalLook || isRotationOrFade);
-    
+    backgroundCylinder.visible = !(isFinalLook || isRotationOrFade);
+
     allBoxes.forEach(b => {
         if (isRotationOrFade) {
             b.visible = (b === targetView.box);
