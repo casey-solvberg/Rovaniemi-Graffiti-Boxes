@@ -222,7 +222,7 @@ function init() {
     position: new THREE.Vector3(
       arcFocusTarget.x,
       1.6,
-      circleCenterPoint.z + arcRadius + 30
+      circleCenterPoint.z + arcRadius + 18
     ),
     lookAt: arcFocusTarget.clone(),
     fov: 55,
