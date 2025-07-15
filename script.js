@@ -211,9 +211,19 @@ function init() {
   if (pageFooterUI && finalViewIndex !== -1) { pageFooterUI.addEventListener("click", (event) => { if (event.target.closest("a")) { return; } if (!isAnimating && currentViewIndex !== finalViewIndex) { setCameraToView(finalViewIndex, false); } }); }
 }
 
-// ДОБАВЛЕНА ЦЕЛИКОМ: Функция переключения ночного режима
 function toggleNightMode() {
+    // Шаг 1: Меняем состояние (было ночь -> станет день, и наоборот)
     isNightMode = !isNightMode;
+
+    // --- ЕДИНСТВЕННОЕ ИЗМЕНЕНИЕ ---
+    // Находим кнопку по ее НАСТОЯЩЕМУ ID из вашего HTML-файла
+    const nightModeButton = document.getElementById('toggle-light-button');
+    // Добавляем/убираем класс 'active' для синей подсветки
+    nightModeButton.classList.toggle('active', isNightMode);
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+
+    // ВЕСЬ ВАШ ОСТАЛЬНОЙ РАБОЧИЙ КОД ОСТАЕТСЯ В НЕПРИКОСНОВЕННОСТИ
     const duration = 1.5;
     bloomPass.enabled = isNightMode;
     gsap.to(ambientLight, { intensity: isNightMode ? 0.1 : 1.2, duration });
