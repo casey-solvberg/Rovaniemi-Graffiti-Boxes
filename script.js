@@ -42,14 +42,33 @@ const toggleLightButton = document.getElementById("toggle-light-button");
 // --- Ночные переменные ---
 let isNightMode = false;
 let ambientLight, directionalLight;
-let dayFloorTexture; // Убрана nightFloorTexture
+let dayFloorTexture;
 
-function init() {
+// ИЗМЕНЕНИЕ: Функция init теперь асинхронная, чтобы дождаться загрузки
+async function init() {
   const textureLoader = new THREE.TextureLoader();
-  dayFloorTexture = textureLoader.load("textures/floor.jpg");
-  // УДАЛЕНО: Загрузка top-bottom.png
-  const backgroundTexture = textureLoader.load("textures/background.jpg");
   
+  // ИЗМЕНЕНИЕ: Убрана загрузка top-bottom.png
+  const texturePromises = [
+    textureLoader.loadAsync("textures/floor.jpg"),
+    textureLoader.loadAsync("textures/background.jpg"),
+    // textureLoader.loadAsync("textures/top-bottom.png") // УБРАНО
+  ];
+  for (let i = 0; i < numActualBoxes; i++) {
+    texturePromises.push(textureLoader.loadAsync(`textures/box_${i + 1}_sides.png`));
+  }
+  
+  // ИЗМЕНЕНИЕ: Ждем, пока ВСЕ текстуры загрузятся
+  const [
+    floorTexture, 
+    backgroundTexture, 
+    // topBottomTexture, // УБРАНО
+    ...sideTextures
+  ] = await Promise.all(texturePromises);
+
+  // Теперь, когда все текстуры загружены, мы можем безопасно продолжать
+  dayFloorTexture = floorTexture;
+
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdddddd);
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -93,12 +112,13 @@ function init() {
   const angleStep = numActualBoxes > 1 ? totalArcAngleRad / (numActualBoxes - 1) : 0;
   const startAngle = -totalArcAngleRad / 2;
 
+  // ИЗМЕНЕНИЕ: Этот цикл теперь работает с уже загруженными текстурами
   for (let i = 0; i < numActualBoxes; i++) {
-    const sideTexture = textureLoader.load(`textures/box_${i + 1}_sides.png`);
+    const sideTexture = sideTextures[i];
     sideTexture.wrapS = THREE.RepeatWrapping;
     sideTexture.repeat.x = 0.25;
 
-    // ИСПРАВЛЕНО: Верх и низ - просто белые материалы без текстуры
+    // ИСПРАВЛЕНО: Верх и низ - просто белые материалы
     const materials = [
       new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
       new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
@@ -178,6 +198,9 @@ function init() {
   if (pageFooterUI && finalViewIndex !== -1) { pageFooterUI.addEventListener("click", (event) => { if (event.target.closest("a")) { return; } if (!isAnimating && currentViewIndex !== finalViewIndex) { setCameraToView(finalViewIndex, false); } }); }
 }
 
+// Запускаем асинхронную инициализацию
+init().catch(error => console.error("Failed to initialize scene:", error));
+
 function toggleNightMode() {
     isNightMode = !isNightMode;
     const duration = 1.5;
@@ -188,7 +211,7 @@ function toggleNightMode() {
     gsap.to(directionalLight, { intensity: isNightMode ? 0.05 : 2.0, duration });
     gsap.to(scene.background, { r: isNightMode ? 0.03 : 0.86, g: isNightMode ? 0.03 : 0.86, b: isNightMode ? 0.1 : 0.86, duration });
     
-    // ИСПРАВЛЕНО: Вместо смены текстуры пола, меняем его цвет для затемнения
+    // Запасной вариант, так как nightFloorTexture нет - меняем цвет материала
     const nightFloorColor = new THREE.Color(0x333333);
     const dayFloorColor = new THREE.Color(0xffffff);
     gsap.to(plane.material.color, {
