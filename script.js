@@ -76,9 +76,9 @@ function init() {
   document.body.appendChild(renderer.domElement);
 
   // ИЗМЕНЕНО: Свет вынесен в глобальные переменные
-  ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+  ambientLight = new THREE.AmbientLight(0xf5faff, 1.2);
   scene.add(ambientLight);
-  directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  directionalLight = new THREE.DirectionalLight(0xfffdeb, 1.5);
   directionalLight.position.set(0, 80, 40);
   directionalLight.castShadow = true;
   directionalLight.shadow.mapSize.width = 2048;
@@ -188,7 +188,7 @@ function init() {
 
   // ДОБАВЛЕНО: Настройка Composer
   const renderPass = new RenderPass(scene, camera);
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.3, 3, 0);
   bloomPass.enabled = false;
   composer = new EffectComposer(renderer);
   composer.addPass(renderPass);
