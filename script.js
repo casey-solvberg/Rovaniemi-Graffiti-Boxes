@@ -42,16 +42,14 @@ const toggleLightButton = document.getElementById("toggle-light-button");
 // --- Ночные переменные ---
 let isNightMode = false;
 let ambientLight, directionalLight;
-let dayFloorTexture, nightFloorTexture;
+let dayFloorTexture; // Убрана nightFloorTexture
 
 function init() {
   const textureLoader = new THREE.TextureLoader();
   dayFloorTexture = textureLoader.load("textures/floor.jpg");
-  // УДАЛЕНО: Загрузка top-bottom.png больше не нужна
-  // const topBottomTexture = textureLoader.load("textures/top-bottom.png"); 
+  // УДАЛЕНО: Загрузка top-bottom.png
   const backgroundTexture = textureLoader.load("textures/background.jpg");
-  nightFloorTexture = textureLoader.load("textures/floor_night.jpg");
-
+  
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xdddddd);
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -100,19 +98,16 @@ function init() {
     sideTexture.wrapS = THREE.RepeatWrapping;
     sideTexture.repeat.x = 0.25;
 
-    // ИСПРАВЛЕНО: Верх и низ теперь - простые белые материалы без текстуры
+    // ИСПРАВЛЕНО: Верх и низ - просто белые материалы без текстуры
     const materials = [
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Правая
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Левая
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),         // Верх (просто белый)
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),         // Низ (просто белый)
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Передняя
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Задняя
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
     ];
-    materials[0].map.offset.x = 0.25; 
-    materials[1].map.offset.x = 0.75; 
-    materials[4].map.offset.x = 0.0;  
-    materials[5].map.offset.x = 0.5;
+    materials[0].map.offset.x = 0.25; materials[1].map.offset.x = 0.75; materials[4].map.offset.x = 0.0; materials[5].map.offset.x = 0.5;
 
     const box = new THREE.Mesh(boxGeometry, materials);
 
@@ -193,7 +188,7 @@ function toggleNightMode() {
     gsap.to(directionalLight, { intensity: isNightMode ? 0.05 : 2.0, duration });
     gsap.to(scene.background, { r: isNightMode ? 0.03 : 0.86, g: isNightMode ? 0.03 : 0.86, b: isNightMode ? 0.1 : 0.86, duration });
     
-    // Используем запасной вариант с затемнением цвета материала, так как floor_night.jpg нет
+    // ИСПРАВЛЕНО: Вместо смены текстуры пола, меняем его цвет для затемнения
     const nightFloorColor = new THREE.Color(0x333333);
     const dayFloorColor = new THREE.Color(0xffffff);
     gsap.to(plane.material.color, {
@@ -202,7 +197,6 @@ function toggleNightMode() {
         b: isNightMode ? nightFloorColor.b : dayFloorColor.b,
         duration,
     });
-
 
     const lightColors = [0x00ff00, 0xff00ff, 0x00aaff, 0xffff00, 0xff5500, 0x00ffff, 0xff0055, 0x5500ff];
 
@@ -241,7 +235,7 @@ function setCameraToView(viewIndex, instant = false) {
   
   isAnimating = true;
   canProcessScroll = false;
-
+  
   const prevViewConfig = cameraViews[currentViewIndex];
   const targetViewConfig = cameraViews[viewIndex];
   currentViewIndex = viewIndex;
