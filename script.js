@@ -188,7 +188,7 @@ function init() {
 
   // ДОБАВЛЕНО: Настройка Composer
   const renderPass = new RenderPass(scene, camera);
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.3, 3, 0);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.2, 0.7, 0);
   bloomPass.enabled = false;
   composer = new EffectComposer(renderer);
   composer.addPass(renderPass);
