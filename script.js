@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
+// --- Глобальные переменные ---
 let scene, camera, renderer, composer, bloomPass;
 let plane, allBoxes = [];
 let backgroundCylinder;
@@ -38,17 +39,16 @@ const nextBoxBtn = document.getElementById("next-box-btn");
 const homeButton = document.getElementById("home-button");
 const toggleLightButton = document.getElementById("toggle-light-button");
 
+// --- Ночные переменные ---
 let isNightMode = false;
 let ambientLight, directionalLight;
 let dayFloorTexture, nightFloorTexture;
-const moonIconSVG = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-const sunIconSVG = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
-
 
 function init() {
   const textureLoader = new THREE.TextureLoader();
   dayFloorTexture = textureLoader.load("textures/floor.jpg");
-  const topBottomTexture = textureLoader.load("textures/top-bottom.png");
+  // УДАЛЕНО: Загрузка top-bottom.png больше не нужна
+  // const topBottomTexture = textureLoader.load("textures/top-bottom.png"); 
   const backgroundTexture = textureLoader.load("textures/background.jpg");
   nightFloorTexture = textureLoader.load("textures/floor_night.jpg");
 
@@ -100,15 +100,19 @@ function init() {
     sideTexture.wrapS = THREE.RepeatWrapping;
     sideTexture.repeat.x = 0.25;
 
+    // ИСПРАВЛЕНО: Верх и низ теперь - простые белые материалы без текстуры
     const materials = [
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: topBottomTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: topBottomTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Правая
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Левая
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),         // Верх (просто белый)
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),         // Низ (просто белый)
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Передняя
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Задняя
     ];
-    materials[0].map.offset.x = 0.25; materials[1].map.offset.x = 0.75; materials[4].map.offset.x = 0.0; materials[5].map.offset.x = 0.5;
+    materials[0].map.offset.x = 0.25; 
+    materials[1].map.offset.x = 0.75; 
+    materials[4].map.offset.x = 0.0;  
+    materials[5].map.offset.x = 0.5;
 
     const box = new THREE.Mesh(boxGeometry, materials);
 
@@ -130,6 +134,7 @@ function init() {
     scene.add(spotLight.target);
   }
   
+  // Код создания cameraViews остается без изменений
   arcFocusTarget = numActualBoxes > 0 ? new THREE.Vector3(circleCenterPoint.x, boxHeight / 2 + LIFT_HEIGHT, circleCenterPoint.z + arcRadius) : new THREE.Vector3(0, boxHeight / 2 + LIFT_HEIGHT, 0);
   cameraViews.push({ navLabel: "Домой", viewId: 0, name: "View 1: Top Down", type: "general", position: new THREE.Vector3(arcFocusTarget.x, arcFocusTarget.y + 40, arcFocusTarget.z + 5), lookAt: arcFocusTarget.clone(), fov: 60 });
   cameraViews.push({ navLabel: "Общий вид", viewId: 1, name: "View 2: Arc Front", type: "general", position: new THREE.Vector3(arcFocusTarget.x, 1.6, circleCenterPoint.z + arcRadius + 18), lookAt: arcFocusTarget.clone(), fov: 55 });
@@ -188,8 +193,16 @@ function toggleNightMode() {
     gsap.to(directionalLight, { intensity: isNightMode ? 0.05 : 2.0, duration });
     gsap.to(scene.background, { r: isNightMode ? 0.03 : 0.86, g: isNightMode ? 0.03 : 0.86, b: isNightMode ? 0.1 : 0.86, duration });
     
-    plane.material.map = isNightMode ? nightFloorTexture : dayFloorTexture;
-    plane.material.needsUpdate = true;
+    // Используем запасной вариант с затемнением цвета материала, так как floor_night.jpg нет
+    const nightFloorColor = new THREE.Color(0x333333);
+    const dayFloorColor = new THREE.Color(0xffffff);
+    gsap.to(plane.material.color, {
+        r: isNightMode ? nightFloorColor.r : dayFloorColor.r,
+        g: isNightMode ? nightFloorColor.g : dayFloorColor.g,
+        b: isNightMode ? nightFloorColor.b : dayFloorColor.b,
+        duration,
+    });
+
 
     const lightColors = [0x00ff00, 0xff00ff, 0x00aaff, 0xffff00, 0xff5500, 0x00ffff, 0xff0055, 0x5500ff];
 
@@ -203,15 +216,6 @@ function toggleNightMode() {
             gsap.to(spotLight, { intensity: 0, duration });
         }
     });
-
-    const iconContainer = toggleLightButton.querySelector('.my-icon-button-svg');
-    if (isNightMode) {
-        iconContainer.innerHTML = sunIconSVG;
-        toggleLightButton.title = "Включить дневной режим";
-    } else {
-        iconContainer.innerHTML = moonIconSVG;
-        toggleLightButton.title = "Включить ночной режим";
-    }
 }
 
 function setCameraToView(viewIndex, instant = false) {
