@@ -48,25 +48,20 @@ let dayFloorTexture;
 async function init() {
   const textureLoader = new THREE.TextureLoader();
   
-  // ИЗМЕНЕНИЕ: Убрана загрузка top-bottom.png
   const texturePromises = [
     textureLoader.loadAsync("textures/floor.jpg"),
     textureLoader.loadAsync("textures/background.jpg"),
-    // textureLoader.loadAsync("textures/top-bottom.png") // УБРАНО
   ];
   for (let i = 0; i < numActualBoxes; i++) {
     texturePromises.push(textureLoader.loadAsync(`textures/box_${i + 1}_sides.png`));
   }
   
-  // ИЗМЕНЕНИЕ: Ждем, пока ВСЕ текстуры загрузятся
   const [
     floorTexture, 
     backgroundTexture, 
-    // topBottomTexture, // УБРАНО
     ...sideTextures
   ] = await Promise.all(texturePromises);
 
-  // Теперь, когда все текстуры загружены, мы можем безопасно продолжать
   dayFloorTexture = floorTexture;
 
   scene = new THREE.Scene();
@@ -112,22 +107,24 @@ async function init() {
   const angleStep = numActualBoxes > 1 ? totalArcAngleRad / (numActualBoxes - 1) : 0;
   const startAngle = -totalArcAngleRad / 2;
 
-  // ИЗМЕНЕНИЕ: Этот цикл теперь работает с уже загруженными текстурами
   for (let i = 0; i < numActualBoxes; i++) {
     const sideTexture = sideTextures[i];
     sideTexture.wrapS = THREE.RepeatWrapping;
     sideTexture.repeat.x = 0.25;
 
-    // ИСПРАВЛЕНО: Верх и низ - просто белые материалы
+    // ИСПРАВЛЕНО: Убран материал для нижней грани
     const materials = [
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
-      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }),
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Правая
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Левая
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.2 }),         // Верх
+      null,                                                                                         // Низ (пусто)
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Передняя
+      new THREE.MeshStandardMaterial({ map: sideTexture.clone(), roughness: 0.8, metalness: 0.2 }), // Задняя
     ];
-    materials[0].map.offset.x = 0.25; materials[1].map.offset.x = 0.75; materials[4].map.offset.x = 0.0; materials[5].map.offset.x = 0.5;
+    materials[0].map.offset.x = 0.25; 
+    materials[1].map.offset.x = 0.75; 
+    materials[4].map.offset.x = 0.0;
+    materials[5].map.offset.x = 0.5;
 
     const box = new THREE.Mesh(boxGeometry, materials);
 
@@ -149,7 +146,6 @@ async function init() {
     scene.add(spotLight.target);
   }
   
-  // Код создания cameraViews остается без изменений
   arcFocusTarget = numActualBoxes > 0 ? new THREE.Vector3(circleCenterPoint.x, boxHeight / 2 + LIFT_HEIGHT, circleCenterPoint.z + arcRadius) : new THREE.Vector3(0, boxHeight / 2 + LIFT_HEIGHT, 0);
   cameraViews.push({ navLabel: "Домой", viewId: 0, name: "View 1: Top Down", type: "general", position: new THREE.Vector3(arcFocusTarget.x, arcFocusTarget.y + 40, arcFocusTarget.z + 5), lookAt: arcFocusTarget.clone(), fov: 60 });
   cameraViews.push({ navLabel: "Общий вид", viewId: 1, name: "View 2: Arc Front", type: "general", position: new THREE.Vector3(arcFocusTarget.x, 1.6, circleCenterPoint.z + arcRadius + 18), lookAt: arcFocusTarget.clone(), fov: 55 });
@@ -178,7 +174,7 @@ async function init() {
   cameraViews.push({ navLabel: "Финал", viewId: cameraViews.length, name: "View 6: Fade Out", type: "final_fade", box: lastBoxForRotation, cameraViewIndexToClone: FINAL_LOOK_VIEW_INDEX });
 
   const renderPass = new RenderPass(scene, camera);
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.4, 0);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.5, 0);
   bloomPass.enabled = false;
   composer = new EffectComposer(renderer);
   composer.addPass(renderPass);
@@ -198,7 +194,6 @@ async function init() {
   if (pageFooterUI && finalViewIndex !== -1) { pageFooterUI.addEventListener("click", (event) => { if (event.target.closest("a")) { return; } if (!isAnimating && currentViewIndex !== finalViewIndex) { setCameraToView(finalViewIndex, false); } }); }
 }
 
-// Запускаем асинхронную инициализацию
 init().catch(error => console.error("Failed to initialize scene:", error));
 
 function toggleNightMode() {
@@ -211,7 +206,7 @@ function toggleNightMode() {
     gsap.to(directionalLight, { intensity: isNightMode ? 0.05 : 2.0, duration });
     gsap.to(scene.background, { r: isNightMode ? 0.03 : 0.86, g: isNightMode ? 0.03 : 0.86, b: isNightMode ? 0.1 : 0.86, duration });
     
-    // Запасной вариант, так как nightFloorTexture нет - меняем цвет материала
+    // ИСПРАВЛЕНО: Убрана смена текстуры, так как файла нет. Только цвет.
     const nightFloorColor = new THREE.Color(0x333333);
     const dayFloorColor = new THREE.Color(0xffffff);
     gsap.to(plane.material.color, {
@@ -289,7 +284,7 @@ function setCameraToView(viewIndex, instant = false) {
       
       if (targetViewConfig.type === "final_fade") {
         const materials = Array.isArray(targetViewConfig.box.material) ? targetViewConfig.box.material : [targetViewConfig.box.material];
-        materials.forEach(m => m.opacity = 0);
+        materials.forEach(m => { if(m) m.opacity = 0 });
       }
 
       camera.position.copy(actualCameraPosition);
@@ -311,7 +306,7 @@ function setCameraToView(viewIndex, instant = false) {
   if (targetViewConfig.type === "final_fade") {
     const materials = Array.isArray(targetViewConfig.box.material) ? targetViewConfig.box.material : [targetViewConfig.box.material];
     materials.forEach(m => {
-        tl.to(m, { opacity: 0, duration: fadeAnimationDuration, ease: "power1.inOut" }, ">-0.1");
+        if (m) tl.to(m, { opacity: 0, duration: fadeAnimationDuration, ease: "power1.inOut" }, ">-0.1");
     });
     tl.to(textPanelUI, { opacity: 0, duration: fadeAnimationDuration, ease: "power1.inOut" }, ">-0.1");
   }
@@ -351,7 +346,7 @@ function handleSceneAndFooterState(targetView, prevView) {
     allBoxes.forEach((b) => {
       b.visible = true;
       const materials = Array.isArray(b.material) ? b.material : [b.material];
-      materials.forEach(m => m.opacity = 1);
+      materials.forEach(m => { if(m) m.opacity = 1 });
 
       if (isRotationOrFade) {
           if (b !== targetView.box) b.visible = false;
